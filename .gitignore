@@ -37,3 +37,9 @@ vignettes/*.pdf
 
 # R Environment Variables
 .Renviron
+
+#gitRemove note
+gitRemove.txt
+
+#Data results
+dataResultsGender/*.csv
