@@ -96,7 +96,9 @@ for (c in unique(deathrate.matrices$c_code)) {
 }
 rm("c", "i", "IFR.vector", "frail_male", "frail_female", "frail_grouped", "filt_male", "filt_grouped", "filt_female", "fatality.matrix")
 
-setwd(paste("/Users/ASUS/Documents/MyDocs/Work/COVID-19/Project/Covid_RGP_firstGit/dataResultsGender",sep=""))
-write.table(file=paste("fatality.matrices",str_c(unique(fatality.matrices$c_code),sep="",collapse="_"),"csv",sep="."),x=fatality.matrices,sep=" ",dec=".")
-write.table(file=paste("IFR.diff.vectors",str_c(unique(IFR.diff.vectors$c_code),sep="",collapse="_"),"csv",sep="."),x=IFR.diff.vectors,sep=" ",dec=".")
-setwd(paste("/Users/ASUS/Documents/MyDocs/Work/COVID-19/Project/Covid_RGP_firstGit",sep=""))
+setwd(paste("/Users/ASUS/Documents/MyDocs/Work/COVID-19/Project/Covid_RGP_firstGit/dataResultsGender", sep = ""))
+write.table(file = paste("fatality.matrices", str_c(unique(fatality.matrices$c_code), sep = "", collapse = "_"), "csv", sep = "."), x = fatality.matrices, sep = " ", dec = ".")
+write.table(file = paste("IFR.diff.vectors", str_c(unique(IFR.diff.vectors$c_code), sep = "", collapse = "_"), "csv", sep = "."), x = IFR.diff.vectors, sep = " ", dec = ".")
+write.table(file = paste("frailty.matrices", str_c(unique(frailty.matrices$c_code), sep = "", collapse = "_"), "csv", sep = "."), x = frailty.matrices, sep = " ", dec = ".")
+write.table(file = paste("deathrate.matrices", str_c(unique(deathrate.matrices$c_code), sep = "", collapse = "_"), "csv", sep = "."), x = deathrate.matrices, sep = " ", dec = ".")
+setwd(paste("/Users/ASUS/Documents/MyDocs/Work/COVID-19/Project/Covid_RGP_firstGit", sep = ""))
