@@ -1,7 +1,8 @@
 library(tidyverse)
 library(reshape2)
 
-wd_list<-c("0417_results_ODriscoll_US","0415_results_ODriscoll_UK","0415_results_ODriscoll_FR")
+#wd_list<-c("0417_results_ODriscoll_US","0415_results_ODriscoll_UK","0415_results_ODriscoll_FR")
+wd_list<-c("0622_results_ODriscoll_UK")
 
 for(wd in wd_list){
   rm(list=setdiff(ls(), c("wd_list","wd")))
@@ -12,7 +13,8 @@ for(wd in wd_list){
   setwd(paste("/Users/ASUS/Documents/MyDocs/Work/COVID-19/Project/Covid_RGP_firstGit/dataExtractedGender",sep=""))
   
   #Deathrate matrices
-  write.table(deathrate.matrices.comb.results,paste("combIFRMatrix",str_sub(wd,-2),".csv",sep=""),sep=" ",dec=".")
+  #write.table(deathrate.matrices.comb.results,paste("combIFRMatrix",str_sub(wd,-2),".csv",sep=""),sep=" ",dec=".")
+  write.table(deathrate.matrices.results,paste("combIFRMatrix",str_sub(wd,-2),".csv",sep=""),sep=" ",dec=".")
   
   #Frailty matrix by gender
   # Calculation----
