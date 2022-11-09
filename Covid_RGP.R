@@ -1,3 +1,8 @@
+#ToDo
+##rakd be az eredeti ODriscoll adatsort
+##igy mar ki tudod szamoltatni vele az uj meroszamot, amit Viktor javasolt
+##Valahogy az IFR.diff.vector-t kéne megcsinálni csak intervallumokra
+
 # Libraries----
 library(tidyverse)
 library(profvis)
