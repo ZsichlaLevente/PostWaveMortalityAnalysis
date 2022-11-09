@@ -41,5 +41,6 @@ vignettes/*.pdf
 #gitRemove note
 gitRemove.txt
 
-#Data results
-dataResultsGender/*.csv
+#Data files
+*.csv
+
