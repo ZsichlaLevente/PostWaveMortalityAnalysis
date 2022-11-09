@@ -1,0 +1,5 @@
+- visualize the correlation between these two datasets
+- learn the basics of time series analysis
+- automatically find pandemic and excess mortality peaks
+- 
+ 
