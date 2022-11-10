@@ -1,5 +1,5 @@
 #### Pull data if necessary
-#source("C:/Users/leven/OneDrive/Dokumentumok/Dokumentumok/Work/Projects/COVID-19/YPL Project/_PostPandemic/pullData.R")
+#source("C:/Users/leven/OneDrive/Dokumentumok/Dokumentumok/Work/Projects/COVID-19/YPL Project/_PostWaveMortalityAnalysis/pullData.R")
 
 #### Libraries
 library(tidyverse)
@@ -7,7 +7,7 @@ library(data.table)
 
 #### Load data
 # set working directory
-setwd("C:/Users/leven/OneDrive/Dokumentumok/Dokumentumok/Work/Projects/COVID-19/YPL Project/_PostPandemic/Data")
+setwd("C:/Users/leven/OneDrive/Dokumentumok/Dokumentumok/Work/Projects/COVID-19/YPL Project/_PostWaveMortalityAnalysis/Data")
 # Read in data
 owid<-read_csv(file="owid_covid_data.csv")
 owidEM<-read_csv(file="owid_excess_mortality.csv")
@@ -17,11 +17,11 @@ who<-read_csv(file="who.csv")
 COVerAGE<-fread(file="inputDB.csv",skip = 1)
 
 #### Process COVerAGE dataset
-source("C:/Users/leven/OneDrive/Dokumentumok/Dokumentumok/Work/Projects/COVID-19/YPL Project/_PostPandemic/COVerAGEmanipulation.R")
+source("C:/Users/leven/OneDrive/Dokumentumok/Dokumentumok/Work/Projects/COVID-19/YPL Project/_PostWaveMortalityAnalysis/COVerAGEmanipulation.R")
 COVerAGE<-processCOVerAGE(data=COVerAGE)
 
 #### Load data visualization functions
-source("C:/Users/leven/OneDrive/Dokumentumok/Dokumentumok/Work/Projects/COVID-19/YPL Project/_PostPandemic/DataVisualization.R")
+source("C:/Users/leven/OneDrive/Dokumentumok/Dokumentumok/Work/Projects/COVID-19/YPL Project/_PostWaveMortalityAnalysis/DataVisualization.R")
 
 #### Visualization
 
@@ -55,4 +55,12 @@ showPScores(Location = "United Kingdom",
             measure="p_proj",
             scaleAll=T)
 
-## compare reported number of deaths in the ecdc, who, owid and COVerAGE datasets
+## compare reported number of deaths in the who and COVerAGE datasets
+# Args: none
+# show: who (black);
+#       COVerAGE (red)
+# Plots: 1. Weekly number of COVID-19 deaths by sex (12 countries)
+#        2. Weekly number of COVID-19 deaths by age (9 countries)
+#        3. Weekly number of deaths compared to the WHO estimates (22 countries)
+
+showCOVerAGErestoration()

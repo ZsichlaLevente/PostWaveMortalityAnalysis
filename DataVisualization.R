@@ -4,6 +4,16 @@ library(lubridate)
 library(tidyquant)
 library(ggformula)
 
+##common theme for plots
+myTheme<-function(){
+  theme_bw() %+replace%
+    theme( text=element_text(size=18),strip.background = element_rect(fill = "white"),axis.text.y=element_text(colour="black",margin=margin(l=10)),
+          panel.spacing = unit(1.5, "lines"), plot.margin=margin(t = 0, r = 10, b = 0, l = 0, unit = "pt"),
+          panel.background = element_rect(fill = "white",colour = "white",size = 0.5, linetype = "solid"),
+          panel.grid.major = element_line(size = 0.5, linetype = 'solid',colour = "gray90"), 
+          panel.grid.minor = element_line(size = 0.25, linetype = 'solid',colour = "white"))
+}
+
 ## visualize stmf dataset (make plots for all age categories)
 # Args: country or region (options: AUS, AUT, BEL BGR, CAN, CHE, CHL, CZE, DEUTNP, DNK, ESP, EST, FIN, FRATNP, GBRTENW, GBR_NIR, GBR_SCO, GRC, HRV, HUN, ISL, ISR, ITA, KOR, LTU, LUX, LVA, NLD, NOR, NZL_NP, POL, PRT, RUS, SVK, SVN, SWE, TWN, USA)
 #       sex (options: b,m,f)
@@ -120,42 +130,48 @@ showPScores<-function(Location, targetYear, measure,scaleAll=F){
 
 
 ## compare reported number of deaths in the who and COVerAGE datasets
-# Args: country or region (options: code line below)
-#Reduce(intersect, list(who$Country,filter(COVerAGE2,Age_bin=="TOT")$Country))
-#       movingAverage (options: integer number)
-# show: ecdc (green); 
-#       who (black);
-#       owid (blue);
+# Args: none
+# show: who (black);
 #       COVerAGE (red)
 
-#################################################################################################################
-showDCounts<-function(Location, movingAverage){
-  COVerAGE2<-COVerAGE%>%
-    group_by(Country,Date,Age_bin,Sex)%>%
-    summarize(Value=sum(Value_weekly))
+showCOVerAGErestoration<-function(Location){
+
+  countryList<-readxl::read_xlsx("COVerAGEManualInspection.xlsx")
   
-  Location="Ukraine"
+  who2<-who%>%
+    filter(Country%in%countryList$WHO_name)%>% # filter selected countries in the who dataset
+    mutate(Date=ceiling_date(Date_reported,unit = "week"))%>% # sunday of every week
+    left_join(select(countryList,WHO_name,COVerAGE_name),by=c('Country'='WHO_name'))%>% #join with country table to show COVerAGE names if they do not match
+    select(-Country)%>% # remove WHO names
+    rename(Country=COVerAGE_name)%>% # renaming
+    group_by(Date,Country)%>%
+    summarise(Value=sum(New_deaths)) # summation of deaths within one week
   
-  ggplot(data=NULL)+
-    geom_point(data=filter(COVerAGE2,Country==Location,Age_bin=="TOT"),aes(Date,Value),alpha=0.2,color="red")+
-    geom_spline(data=filter(COVerAGE2,Country==Location,Age_bin=="TOT"),aes(Date,Value),lwd=1.2,color="red")+
-    geom_point(data=filter(who,Country==Location),aes(Date_reported,New_deaths),alpha=0.2,color="black")+
-    geom_spline(data=filter(who,Country==Location),aes(Date_reported,New_deaths),lwd=1.2,color="black")+
-    lims(y=c(0,100))
+  p1<-ggplot(data=NULL)+
+    geom_point(data=filter(COVerAGE,Age_bin=="TOT",Sex!="b"),aes(Date,Value,color=Sex),alpha=0.2)+
+    geom_spline(data=filter(COVerAGE,Age_bin=="TOT",Sex!="b"),aes(Date,Value,color=Sex),lwd=1.2)+
+    facet_wrap(Sex~Country,scales="free_y")+
+    myTheme()
+  
+  p2<-ggplot(data=NULL)+
+    geom_point(data=filter(COVerAGE,Sex=="b",Age_bin!="TOT"),aes(Date,Value,color=Age_bin,group=Sex),alpha=0.2)+
+    geom_spline(data=filter(COVerAGE,Sex=="b",Age_bin!="TOT"),aes(Date,Value,color=Age_bin,group=Sex),lwd=1.2)+
+    facet_wrap(Age_bin~Country,scales="free_y")+
+    myTheme()
+  
+  p3<-ggplot(data=NULL)+
+    geom_point(data=filter(COVerAGE,Age_bin=="TOT",Sex=="b"),aes(Date,Value),alpha=0.2,color="red")+
+    geom_spline(data=filter(COVerAGE,Age_bin=="TOT",Sex=="b"),aes(Date,Value),lwd=1.2,color="red")+
+    geom_point(data=filter(who2),aes(Date,Value),alpha=0.2,color="black")+
+    geom_spline(data=filter(who2),aes(Date, Value),lwd=1.2,color="black")+
+    facet_wrap(~Country,scales="free_y")+
+    myTheme()
   
   
-  
-  ggplot(data=NULL)+
-    geom_point(data=filter(COVerAGE2,Age_bin=="TOT",Value>0,Date>"2020-01-01"),aes(Date,Value,color=Sex),alpha=0.2)+
-    geom_spline(data=filter(COVerAGE2,Age_bin=="TOT",Value>0,Date>"2020-01-01"),aes(Date,Value,color=Sex),lwd=1.2)+
-    facet_wrap(~Country,scales="free_y")
-  
-  ggplot(data=NULL)+
-    geom_point(data=filter(COVerAGE2,Value>0,Date>"2020-01-01"),aes(Date,Value,color=Age_bin,group=Sex),alpha=0.2)+
-    geom_spline(data=filter(COVerAGE2,Value>0,Date>"2020-01-01"),aes(Date,Value,color=Age_bin,group=Sex),lwd=1.2)+
-    facet_wrap(~Country,scales="free_y")
+  print(p1)
+  print(p2)
+  print(p3)
 }
-##################################################################################################################
 
 
 ## show COVerAGE death counts and excess mortality p scores in every age category

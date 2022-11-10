@@ -1,4 +1,4 @@
-setwd("C:/Users/leven/OneDrive/Dokumentumok/Dokumentumok/Work/Projects/COVID-19/YPL Project/_PostPandemic/Data")
+setwd("C:/Users/leven/OneDrive/Dokumentumok/Dokumentumok/Work/Projects/COVID-19/YPL Project/_PostWaveMortalityAnalysis/Data")
 
 #library(vroom)
 library(data.table)
