@@ -1,8 +1,5 @@
 setwd("C:/Users/leven/OneDrive/Dokumentumok/Dokumentumok/Work/Projects/COVID-19/YPL Project/_PostWaveMortalityAnalysis/Data")
 
-#library(vroom)
-library(data.table)
-
 # Download the Short-Term Mortality Fluctuations dataset
 download.file(url="https://mortality.org/File/GetDocument/Public/STMF/Outputs/stmf.csv",destfile = "stmf.csv")
 download.file(url="https://mortality.org/File/GetDocument/Public/STMF_DOC/STMFNote.pdf",destfile = "STMFNote.pdf")

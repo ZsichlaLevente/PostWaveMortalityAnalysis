@@ -1,6 +1,7 @@
-library(lubridate)
 
 processCOVerAGE<-function(data){
+  
+  data<-COVerAGE
   
   ## preprocessing of dataset, filtering out unusable data
   data<-tibble(data[data$Measure=="Deaths" & data$Metric=="Count" & data$Region=="All" ,]) # filter down to death counts on the country level
@@ -36,45 +37,70 @@ processCOVerAGE<-function(data){
     filter(Value>=0)
 
   ## filtering countries with unusable data after manual inspection
-  countryList<-readxl::read_xlsx("COVerAGEManualInspection.xlsx")%>% # reading in data about selected countries and missing information
-    mutate(Sex_str=as.logical(Sex_str),
-           Sex_both=as.logical(Sex_both),
-           TOT=as.logical(TOT),
-           BINS=as.logical(BINS))
+  countryList<-readxl::read_xlsx("CountryList.xlsx") # reading in data about selected countries
   
   dataOut<-dataOut%>%
     filter(Country%in%countryList$COVerAGE_name) # filter out unselected countries
+
+  ### compute missing information in the selected countries
+  ## calculate sex-neutral age-stratified data if sex-stratified is available
+  # detect if information is missing
+  countryList<-countryList%>%
+    mutate(Astr_Sstr=COVerAGE_name%in%unique(filter(dataOut,Sex!="b",Age_bin!="TOT")$Country),
+           Astr_Sn=COVerAGE_name%in%unique(filter(dataOut,Sex=="b",Age_bin!="TOT")$Country))
+  missingData<-filter(countryList,Astr_Sstr & !Astr_Sn)$COVerAGE_name
   
-  ## compute missing information in the selected countries
-  
-  # gender neutral death counts
-  missingNeutral<-filter(countryList,!Sex_both)$COVerAGE_name # countries with missing information
   dataOut<-dataOut%>%
-    filter(Country%in%missingNeutral)%>% # filtering
+    filter(Country%in%missingData,Age_bin!="TOT")%>% # filtering
     group_by(Country,Date,Age_bin)%>% # grouping without gender
     summarize(Value=sum(Value))%>% # sum according to gender
     mutate(Sex="b", .after= Date)%>% # add Sex column
     rbind(dataOut) # add information to the original data frame
   
-  # sum of deaths for the total population without age stratification
-  missingTOT<-filter(countryList,!TOT)$COVerAGE_name # countries with missing information
+  ## calculate sex stratified data for the total population
+  # detect if information is missing
+  countryList<-countryList%>%
+    mutate(Astr_Sstr=COVerAGE_name%in%unique(filter(dataOut,Sex!="b",Age_bin!="TOT")$Country),
+           An_Sstr=COVerAGE_name%in%unique(filter(dataOut,Sex!="b",Age_bin=="TOT")$Country))
+  missingData<-filter(countryList,Astr_Sstr & !An_Sstr)$COVerAGE_name
+   
   dataOut<-dataOut%>%
-    filter(Country%in%missingTOT,Sex=="b")%>% # filtering, sex-neutral data
-    group_by(Country,Date)%>% # grouping without sex and age bins
-    summarize(Value=sum(Value))%>% # sum according to gender
-    mutate(Sex="b", .after= Date)%>% # add Sex and Age_bin columns
-    mutate(Age_bin="TOT",.after=Sex)%>%
+    filter(Country%in%missingData,Age_bin!="TOT",Sex!="b")%>% # filtering
+    group_by(Country,Date,Sex)%>% # grouping without age bins
+    summarize(Value=sum(Value))%>% # sum according to age bins
+    mutate(Age_bin="TOT", .after= Sex)%>% # add Age_bins column
     rbind(dataOut) # add information to the original data frame
   
-  ## smoothing data by lowering the resolution to weekly reports (on Sunday)
+  ## calculate sex neutral data for the total population
+  # detect if information is missing
+  countryList<-countryList%>%
+    mutate(An_Sstr=COVerAGE_name%in%unique(filter(dataOut,Sex!="b",Age_bin=="TOT")$Country),
+           An_Sn=COVerAGE_name%in%unique(filter(dataOut,Sex=="b",Age_bin=="TOT")$Country))
+  missingData<-filter(countryList,An_Sstr & !An_Sn)$COVerAGE_name
   
- dataOut<- dataOut%>%
+  dataOut<-dataOut%>%
+    filter(Country%in%missingData,Age_bin=="TOT",Sex!="b")%>% # filtering
+    group_by(Country,Date)%>% # grouping without age bins and sex
+    summarize(Value=sum(Value))%>% # sum according to age bins
+    mutate(Sex="b", .after=Date)%>%
+    mutate(Age_bin="TOT", .after= Sex)%>% # add Sex and Age_bins columns
+    rbind(dataOut) # add information to the original data frame
+  
+  # check if all information is recovered
+  countryList<-countryList%>%
+    mutate(Astr_Sstr=COVerAGE_name%in%unique(filter(dataOut,Sex!="b",Age_bin!="TOT")$Country),
+           Astr_Sn=COVerAGE_name%in%unique(filter(dataOut,Sex=="b",Age_bin!="TOT")$Country),
+           An_Sstr=COVerAGE_name%in%unique(filter(dataOut,Sex!="b",Age_bin=="TOT")$Country),
+           An_Sn=COVerAGE_name%in%unique(filter(dataOut,Sex=="b",Age_bin=="TOT")$Country))
+  
+  ## smoothing data by lowering the resolution to weekly reports (on Sunday)
+  dataOut<- dataOut%>%
     mutate(Date=ceiling_date(Date, unit="week"))%>% #sunday of every week
     group_by(Country,Sex,Age_bin,Date)%>% # group with weekly resolution
     summarise(Value=sum(Value))%>% # summation of deaths within one week
     ungroup()
   
-  return(dataOut)
+  return(list(dataOut,countryList)) # return multiple objects from function
 }
 
 

@@ -1,9 +1,3 @@
-library(tidyverse)
-library(ggpubr)
-library(lubridate)
-library(tidyquant)
-library(ggformula)
-
 ##common theme for plots
 myTheme<-function(){
   theme_bw() %+replace%
@@ -36,6 +30,7 @@ if(measure=="deaths"){
 
 myplots <- vector('list', 6)
 for(i in 1:length(measureCats)){
+  
   myplots[[i]]<-local({
     #message(i)
     i<-i
@@ -67,8 +62,10 @@ for(i in 1:length(measureCats)){
           ))
       }
     }
-    print(p1)
+    
+    return(p1)
   })
+  
 }
 plot1<-ggarrange(myplots[[1]],myplots[[2]],myplots[[3]],myplots[[4]],myplots[[5]],myplots[[6]], ncol = 3, nrow = 2)
 print(annotate_figure(plot1, top = text_grob(paste("(country=",CCode,", sex=",sex,", target year=",targetYear," and reference years=",refYears[1],"-",refYears[length(refYears)],")",sep=""), face = "bold", size = 14)))
@@ -96,6 +93,7 @@ showPScores<-function(Location, targetYear, measure,scaleAll=F){
       i<-i
       p1<-ggplot(data=NULL)+
         geom_line(data=filter(owidEM,location==Location, year(date)==targetYear),aes(x=time, y=eval(parse(text=measureCats[i]))),lwd=1.2)+ #target year
+        geom_spline(data=filter(owidEM,location==Location, year(date)==targetYear),aes(x=time, y=eval(parse(text=measureCats[i]))),lwd=1.2,alpha=0.5,color="royalblue")+
         geom_hline(yintercept=0,lwd=1.1,color="lightskyblue")+
         scale_x_continuous(breaks= c(1, seq(5, 45, 5), 50, 52), labels=c(1, seq(5, 45, 5), "", 52),expand = c(0, 0))+
         labs(y=measureCats[i])+
@@ -121,7 +119,7 @@ showPScores<-function(Location, targetYear, measure,scaleAll=F){
             ))
         }
       }
-      print(p1)
+      return(p1)
     })
   }
   plot1<-ggarrange(myplots[[1]],myplots[[2]],myplots[[3]],myplots[[4]],myplots[[5]],myplots[[6]], ncol = 3, nrow = 2)
@@ -135,8 +133,6 @@ showPScores<-function(Location, targetYear, measure,scaleAll=F){
 #       COVerAGE (red)
 
 showCOVerAGErestoration<-function(Location){
-
-  countryList<-readxl::read_xlsx("COVerAGEManualInspection.xlsx")
   
   who2<-who%>%
     filter(Country%in%countryList$WHO_name)%>% # filter selected countries in the who dataset
@@ -154,8 +150,8 @@ showCOVerAGErestoration<-function(Location){
     myTheme()
   
   p2<-ggplot(data=NULL)+
-    geom_point(data=filter(COVerAGE,Sex=="b",Age_bin!="TOT"),aes(Date,Value,color=Age_bin,group=Sex),alpha=0.2)+
-    geom_spline(data=filter(COVerAGE,Sex=="b",Age_bin!="TOT"),aes(Date,Value,color=Age_bin,group=Sex),lwd=1.2)+
+    geom_point(data=filter(COVerAGE,Age_bin!="TOT",Sex=="b"),aes(Date,Value,color=Age_bin,group=Sex),alpha=0.2)+
+    geom_spline(data=filter(COVerAGE,Age_bin!="TOT",Sex=="b"),aes(Date,Value,color=Age_bin,group=Sex),lwd=1.2)+
     facet_wrap(Age_bin~Country,scales="free_y")+
     myTheme()
   
@@ -174,4 +170,27 @@ showCOVerAGErestoration<-function(Location){
 }
 
 
-## show COVerAGE death counts and excess mortality p scores in every age category
+## show COVerAGE death counts and excess mortality p scores in every selected country
+
+showPscoresAndDeaths<-function(){
+  
+  owidEM<-owidEM%>%
+    left_join(select(countryList,OWID_name,COVerAGE_name),by=c('location'='OWID_name'))%>% #join with country table to show COVerAGE names if they do not match
+    mutate(Country=COVerAGE_name,.before=location)%>%
+    select(-location,-COVerAGE_name) # remove owid names
+  
+  scaleY<-30
+  
+  p1<-ggplot(data=NULL)+
+    geom_point(data=filter(COVerAGE,Age_bin=="TOT",Sex=="b"),aes(Date,Value),alpha=0.5,color="firebrick")+
+    geom_spline(data=filter(COVerAGE,Age_bin=="TOT",Sex=="b"),aes(Date,Value),lwd=1.2,alpha=0.8,color="firebrick")+
+    geom_point(data=filter(owidEM,Country%in%countryList$COVerAGE_name,date>as.Date("2020-01-01")),aes(x=date, y=p_scores_all_ages*scaleY),lwd=1.2,color="royalblue")+
+    geom_spline(data=filter(owidEM,Country%in%countryList$COVerAGE_name,date>as.Date("2020-01-01")),aes(x=date, y=p_scores_all_ages*scaleY),lwd=1.2,alpha=0.5,color="royalblue")+
+    geom_hline(yintercept=0,lwd=1.1,color="lightskyblue")+
+    facet_wrap(~Country,scales="free_y")+
+    scale_y_continuous(sec.axis = sec_axis(trans = ~ ./scaleY, name = "P scores"))+
+    myTheme()
+  
+    
+  print(p1)  
+}
